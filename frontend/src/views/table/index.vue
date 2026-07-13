@@ -286,9 +286,9 @@ export default {
 
 <style lang="scss" scoped>
 .app-container {
-  padding: 16px 20px 24px;
-  background: #f3f6fa;
-  min-height: calc(100vh - 56px);
+  padding: 20px 24px 32px;
+  background: transparent;
+  min-height: calc(100vh - 58px);
 }
 
 .filter-container {
@@ -297,19 +297,20 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  margin-bottom: 14px;
-  background: #fff;
-  border: 1px solid #e8edf3;
-  border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
 
   .filter-item {
     margin: 0;
   }
 
   .filter-search-btn {
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 10px 18px;
+    font-weight: 600;
   }
 
   .seat-filter {
@@ -319,16 +320,23 @@ export default {
   }
   .seat-filter-tip {
     margin-left: 10px;
-    color: #909399;
+    color: #94a3b8;
     font-size: 12px;
   }
 }
 
 ::v-deep .el-table {
-  border-radius: 10px;
+  border-radius: 14px;
   overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.text-up { color: #f56c6c; font-weight: 600; }
-.text-down { color: #67c23a; font-weight: 600; }
+::v-deep .el-pagination {
+  margin-top: 16px;
+  padding: 8px 0;
+}
+
+.text-up { color: #e11d48; font-weight: 650; }
+.text-down { color: #059669; font-weight: 650; }
 </style>

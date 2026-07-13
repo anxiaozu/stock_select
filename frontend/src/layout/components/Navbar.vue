@@ -11,10 +11,10 @@
         class="top-menu"
         router
         background-color="transparent"
-        text-color="#4a5568"
-        active-text-color="#1a5fb4"
+        text-color="#64748b"
+        active-text-color="#0f766e"
       >
-        <el-menu-item index="/dashboard">Dashboard</el-menu-item>
+        <el-menu-item index="/dashboard">总览</el-menu-item>
         <el-submenu index="tables" popper-class="top-menu-popper">
           <template slot="title">数据表</template>
           <el-menu-item
@@ -138,14 +138,16 @@ export default {
 
 <style lang="scss" scoped>
 .navbar {
-  height: 56px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px 0 12px;
-  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-  border-bottom: 1px solid #e8edf3;
-  box-shadow: 0 1px 0 rgba(26, 95, 180, 0.04);
+  padding: 0 22px 0 16px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
 
   .nav-left {
     display: flex;
@@ -158,24 +160,31 @@ export default {
     display: inline-flex;
     align-items: center;
     text-decoration: none;
-    margin-right: 12px;
+    margin-right: 18px;
     flex-shrink: 0;
+    padding: 4px 8px 4px 4px;
+    border-radius: 12px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(15, 118, 110, 0.06);
+    }
   }
 
   .brand-logo {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     object-fit: cover;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
   }
 
   .brand-title {
     margin-left: 10px;
     font-size: 15px;
     font-weight: 700;
-    color: #1f2d3d;
-    letter-spacing: 0.02em;
+    color: #0f172a;
+    letter-spacing: 0.01em;
     white-space: nowrap;
   }
 
@@ -183,19 +192,30 @@ export default {
     border-bottom: none !important;
     flex: 1;
     min-width: 0;
+    background: transparent !important;
 
     ::v-deep .el-menu-item,
     ::v-deep .el-submenu__title {
-      height: 56px;
-      line-height: 56px;
+      height: 58px;
+      line-height: 58px;
       font-weight: 500;
+      color: #64748b !important;
       border-bottom: 2px solid transparent !important;
+      transition: color 0.2s ease;
+    }
+
+    ::v-deep .el-menu-item:hover,
+    ::v-deep .el-submenu__title:hover {
+      color: #0f766e !important;
+      background: transparent !important;
     }
 
     ::v-deep .el-menu-item.is-active,
     ::v-deep .el-submenu.is-active .el-submenu__title {
-      border-bottom-color: #1a5fb4 !important;
+      color: #0f766e !important;
+      border-bottom-color: #0f766e !important;
       background: transparent !important;
+      font-weight: 600;
     }
   }
 
@@ -211,19 +231,26 @@ export default {
         display: flex;
         align-items: center;
         cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 12px;
+        transition: background 0.2s ease;
+
+        &:hover {
+          background: rgba(15, 118, 110, 0.06);
+        }
 
         .user-avatar {
-          width: 36px;
-          height: 36px;
+          width: 34px;
+          height: 34px;
           border-radius: 10px;
           object-fit: cover;
-          border: 1px solid #e4e7ed;
+          border: 1px solid #e2e8f0;
         }
 
         .el-icon-caret-bottom {
           margin-left: 6px;
           font-size: 12px;
-          color: #909399;
+          color: #94a3b8;
         }
       }
     }

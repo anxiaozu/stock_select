@@ -467,9 +467,9 @@ export default {
     },
     tempColor() {
       const t = this.sentiment.temperature || this.marketStyle.temperature || 50
-      if (t >= 65) return '#f56c6c'
-      if (t >= 45) return '#e6a23c'
-      return '#67c23a'
+      if (t >= 65) return '#e11d48'
+      if (t >= 45) return '#ea580c'
+      return '#059669'
     },
     tempText() {
       const t = this.sentiment.temperature || 50
@@ -523,10 +523,18 @@ export default {
       if (this.posGaugeChart) this.posGaugeChart.resize()
       if (this.starChart) this.starChart.resize()
     },
+    // 高分屏下默认 canvas 会发糊；星图用 SVG 更清晰，仪表盘用提高的 devicePixelRatio。
+    initHiDpiChart(el, preferredRenderer) {
+      const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3)
+      return echarts.init(el, null, {
+        renderer: preferredRenderer || 'canvas',
+        devicePixelRatio: dpr
+      })
+    },
     renderPosGauge() {
       if (!this.$refs.posGauge) return
       if (!this.posGaugeChart) {
-        this.posGaugeChart = echarts.init(this.$refs.posGauge)
+        this.posGaugeChart = this.initHiDpiChart(this.$refs.posGauge, 'canvas')
       }
       const pos = Number(this.marketStyle.suggestedPosition) || 0
       this.posGaugeChart.setOption({
@@ -562,8 +570,15 @@ export default {
     renderStarMap() {
       if (!this.$refs.starMap) return
       this.starLoading = true
+      // 切换模式时若曾用低清 canvas 初始化过，重建为 SVG。
+      if (this.starChart && this.starChart.getDom &&
+          this.starChart.getDom().querySelector('canvas') &&
+          !this.starChart.getDom().querySelector('svg')) {
+        this.starChart.dispose()
+        this.starChart = null
+      }
       if (!this.starChart) {
-        this.starChart = echarts.init(this.$refs.starMap)
+        this.starChart = this.initHiDpiChart(this.$refs.starMap, 'svg')
       }
       const pack = this.starMode === 'industry' ? this.starMap.industry : this.starMap.stockCap
       const tree = (pack && pack.tree) || null
@@ -574,7 +589,11 @@ export default {
         changePercent: c.changePercent,
         code: c.code,
         leader: c.leader,
-        itemStyle: { color: changeToColor(c.changePercent) }
+        itemStyle: {
+          color: changeToColor(c.changePercent),
+          borderColor: '#0f0f0f',
+          borderWidth: 1
+        }
       }))
       this.starChart.setOption({
         tooltip: {
@@ -590,10 +609,10 @@ export default {
         },
         series: [{
           type: 'treemap',
-          width: '96%',
-          height: '90%',
+          left: 4,
+          right: 4,
           top: 8,
-          bottom: 28,
+          bottom: 24,
           roam: false,
           nodeClick: false,
           breadcrumb: { show: false },
@@ -604,21 +623,31 @@ export default {
               const chStr = (ch == null || !isFinite(Number(ch))) ? '' : ('\n' + (Number(ch) > 0 ? '+' : '') + ch + '%')
               return p.name + chStr
             },
-            fontSize: 11,
+            fontSize: 13,
+            fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif',
+            fontWeight: 600,
             color: '#fff',
-            textShadowColor: 'rgba(0,0,0,.45)',
-            textShadowBlur: 2
+            overflow: 'truncate',
+            ellipsis: '…',
+            lineHeight: 18
           },
           upperLabel: { show: false },
           itemStyle: {
-            borderColor: '#fff',
+            borderColor: '#0f0f0f',
             borderWidth: 1,
-            gapWidth: 1
+            gapWidth: 2
+          },
+          emphasis: {
+            label: { fontSize: 14 },
+            itemStyle: { borderColor: '#fff', borderWidth: 2 }
           },
           data
         }]
       }, true)
-      this.starLoading = false
+      this.$nextTick(() => {
+        if (this.starChart) this.starChart.resize()
+        this.starLoading = false
+      })
     },
     loadDashboard() {
       // 买入表数据量小，直接取全量后本地按分数排序取 Top20。
@@ -748,170 +777,256 @@ export default {
 
 <style lang="scss" scoped>
 .dashboard-container {
-  padding: 24px;
-  background: #f5f7fa;
-  min-height: calc(100vh - 50px);
+  padding: 22px 24px 36px;
+  min-height: calc(100vh - 58px);
+  background: transparent;
 }
 
 .stat-row {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .stat-card {
-  border-radius: 10px;
-  padding: 18px 20px;
-  color: #fff;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+  position: relative;
+  border-radius: 16px;
+  padding: 18px 20px 16px;
+  margin-bottom: 18px;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-  .stat-title { font-size: 13px; opacity: .9; }
-  .stat-value { font-size: 30px; font-weight: 700; margin: 6px 0 2px; }
-  .stat-unit  { font-size: 14px; font-weight: 400; margin-left: 4px; opacity: .85; }
-  .stat-desc  { font-size: 12px; opacity: .75; }
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+  }
+
+  .stat-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: #64748b;
+  }
+  .stat-value {
+    font-size: 28px;
+    font-weight: 750;
+    margin: 8px 0 4px;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+  .stat-unit {
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: 4px;
+    color: #94a3b8;
+  }
+  .stat-desc {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
 }
-.stat-blue   { background: linear-gradient(135deg, #409eff, #2f74d0); }
-.stat-red    { background: linear-gradient(135deg, #f56c6c, #d24a4a); }
-.stat-green  { background: linear-gradient(135deg, #67c23a, #4c9a2a); }
-.stat-purple { background: linear-gradient(135deg, #9254de, #6e3cbc); }
+.stat-blue::before   { background: #0f766e; }
+.stat-red::before    { background: #e11d48; }
+.stat-green::before  { background: #059669; }
+.stat-purple::before { background: #334155; }
+
+.stat-blue   { background: linear-gradient(145deg, #ffffff 40%, #f0fdfa); }
+.stat-red    { background: linear-gradient(145deg, #ffffff 40%, #fff1f2); }
+.stat-green  { background: linear-gradient(145deg, #ffffff 40%, #ecfdf5); }
+.stat-purple { background: linear-gradient(145deg, #ffffff 40%, #f8fafc); }
 
 .panel-card {
-  margin-bottom: 20px;
-  border-radius: 10px;
+  margin-bottom: 18px;
+  border-radius: 16px !important;
+
+  ::v-deep .el-card__body {
+    padding: 16px 18px 18px;
+  }
 
   .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .panel-title { font-size: 15px; font-weight: 600; }
+  .panel-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
 }
 
 .strategy-tag { margin: 0 3px; }
 
-.text-up { color: #f56c6c; font-weight: 600; }
-.text-down { color: #67c23a; font-weight: 600; }
+.text-up { color: #e11d48; font-weight: 650; }
+.text-down { color: #059669; font-weight: 650; }
 
 .empty-tip {
   text-align: center;
-  color: #909399;
-  padding: 24px 0;
+  color: #94a3b8;
+  padding: 28px 0;
+  font-size: 13px;
 }
 
 .rule-card {
-  p { margin: 10px 0; font-size: 13px; line-height: 1.7; color: #303133; }
-  .el-tag { margin-right: 8px; }
-  .rule-note { color: #909399; font-size: 12px; margin-left: 4px; }
-  .rule-muted { color: #909399; font-size: 12px; }
+  p { margin: 10px 0; font-size: 13px; line-height: 1.75; color: #334155; }
+  .el-tag { margin-right: 8px; border-radius: 6px; }
+  .rule-note { color: #94a3b8; font-size: 12px; margin-left: 4px; }
+  .rule-muted { color: #94a3b8; font-size: 12px; }
 }
 
 .version-card {
-  .version-tag { margin-right: 8px; margin-bottom: 6px; }
+  .version-tag { margin-right: 8px; margin-bottom: 6px; border-radius: 999px; }
   .version-links { margin-left: 12px; .el-link { margin-right: 12px; } }
 }
 
-/* 情绪面 */
 .sentiment-card {
   .updown-bar {
     display: flex;
-    height: 14px;
-    border-radius: 7px;
+    height: 12px;
+    border-radius: 999px;
     overflow: hidden;
-    margin: 6px 0 8px;
+    margin: 6px 0 10px;
+    background: #f1f5f9;
 
-    .bar-up   { background: linear-gradient(90deg, #f56c6c, #fa9191); }
-    .bar-down { background: linear-gradient(90deg, #95d475, #67c23a); }
+    .bar-up   { background: linear-gradient(90deg, #fb7185, #e11d48); }
+    .bar-down { background: linear-gradient(90deg, #34d399, #059669); }
   }
   .updown-label {
     display: flex;
     justify-content: space-between;
     font-size: 13px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
   .senti-stats {
     text-align: center;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+    padding: 12px 0;
+    border-radius: 12px;
+    background: #f8fafc;
 
-    .senti-num  { font-size: 22px; font-weight: 700; }
-    .senti-name { font-size: 12px; color: #909399; margin-top: 2px; }
+    .senti-num  { font-size: 22px; font-weight: 750; letter-spacing: -0.02em; }
+    .senti-name { font-size: 12px; color: #94a3b8; margin-top: 4px; }
   }
   .temp-line {
     display: flex;
     align-items: center;
 
-    .temp-progress { flex: 1; margin: 0 10px; }
-    .temp-text { font-size: 14px; font-weight: 700; }
+    .temp-progress { flex: 1; margin: 0 12px; }
+    .temp-text { font-size: 13px; font-weight: 700; min-width: 36px; }
   }
 }
 
-/* 板块资金流 */
 .flow-card {
   .flow-item {
     display: flex;
     align-items: center;
-    padding: 7px 2px;
-    border-bottom: 1px dashed #ebeef5;
+    padding: 9px 4px;
+    border-bottom: 1px solid #f1f5f9;
     font-size: 13px;
+    border-radius: 8px;
+    transition: background 0.15s ease;
 
+    &:hover { background: #f8fafc; }
     &:last-child { border-bottom: none; }
   }
   .flow-rank {
-    width: 20px; height: 20px; line-height: 20px;
-    text-align: center; border-radius: 4px;
-    background: #f0f2f5; color: #909399;
+    width: 22px; height: 22px; line-height: 22px;
+    text-align: center; border-radius: 7px;
+    background: #f1f5f9; color: #64748b;
     font-size: 12px; font-weight: 700; flex-shrink: 0;
   }
-  .flow-rank-top { background: #fdf6ec; color: #e6a23c; }
-  .flow-name { width: 88px; margin-left: 8px; font-weight: 600; color: #303133;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+  .flow-rank-top { background: #fff7ed; color: #ea580c; }
+  .flow-name {
+    width: 88px; margin-left: 8px; font-weight: 650; color: #0f172a;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0;
+  }
   .flow-change { width: 58px; text-align: right; font-size: 12px; flex-shrink: 0; }
-  .flow-bar-wrap { flex: 1; height: 8px; background: #f0f2f5; border-radius: 4px; margin: 0 8px; overflow: hidden; }
-  .flow-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #fa9191, #f56c6c); }
+  .flow-bar-wrap {
+    flex: 1; height: 7px; background: #f1f5f9; border-radius: 999px; margin: 0 10px; overflow: hidden;
+  }
+  .flow-bar {
+    height: 100%; border-radius: 999px; background: linear-gradient(90deg, #fda4af, #e11d48);
+  }
   .flow-amount { width: 76px; text-align: right; font-size: 12px; flex-shrink: 0; }
-  .flow-leader { width: 64px; text-align: right; font-size: 12px; flex-shrink: 0;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .rule-muted { color: #909399; }
+  .flow-leader {
+    width: 64px; text-align: right; font-size: 12px; flex-shrink: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .rule-muted { color: #94a3b8; }
 }
 
-/* 消息面 */
 .news-card {
   .news-list {
     max-height: 300px;
     overflow-y: auto;
+    padding-right: 4px;
+
+    &::-webkit-scrollbar { width: 6px; }
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
   }
   .news-item {
-    padding: 8px 4px;
-    border-bottom: 1px dashed #ebeef5;
+    padding: 10px 8px;
+    border-bottom: 1px solid #f1f5f9;
     font-size: 13px;
-    line-height: 1.6;
+    line-height: 1.65;
+    border-radius: 8px;
+    transition: background 0.15s ease;
 
+    &:hover { background: #f8fafc; }
     &:last-child { border-bottom: none; }
-    .news-time { color: #409eff; margin-right: 8px; white-space: nowrap; font-size: 12px; }
-    .news-content { color: #303133; }
+    .news-time {
+      display: inline-block;
+      color: #0f766e;
+      margin-right: 8px;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .news-content { color: #334155; }
   }
 }
 
-/* 市场风格 / 大盘星图 */
 .market-lab-card {
   .gauge-wrap { text-align: center; }
   .gauge-chart { width: 100%; height: 200px; }
-  .gauge-caption { font-size: 12px; color: #909399; margin-top: -8px; }
+  .gauge-caption { font-size: 12px; color: #94a3b8; margin-top: -8px; }
 
   .effect-box {
-    background: #fafafa;
-    border-radius: 8px;
-    padding: 18px 16px;
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 20px 16px;
     min-height: 180px;
   }
-  .effect-label { font-size: 13px; color: #909399; }
-  .effect-value { font-size: 36px; font-weight: 700; margin-top: 8px; }
+  .effect-label { font-size: 12px; font-weight: 600; color: #64748b; letter-spacing: 0.02em; }
+  .effect-value { font-size: 36px; font-weight: 750; margin-top: 8px; letter-spacing: -0.03em; }
 
   .updown-bar {
     display: flex;
-    height: 12px;
-    border-radius: 6px;
+    height: 10px;
+    border-radius: 999px;
     overflow: hidden;
-    .bar-up   { background: linear-gradient(90deg, #f56c6c, #fa9191); }
-    .bar-down { background: linear-gradient(90deg, #95d475, #67c23a); }
+    background: #e2e8f0;
+    .bar-up   { background: linear-gradient(90deg, #fb7185, #e11d48); }
+    .bar-down { background: linear-gradient(90deg, #34d399, #059669); }
   }
   .updown-label {
     display: flex;
@@ -920,60 +1035,75 @@ export default {
   }
 
   .tile-title {
-    margin: 18px 0 10px;
+    margin: 20px 0 12px;
     font-size: 13px;
-    font-weight: 600;
-    color: #606266;
+    font-weight: 700;
+    color: #334155;
   }
   .sector-tiles {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
   }
   .sector-tile {
-    width: calc(16.66% - 8px);
-    min-width: 110px;
-    border-radius: 6px;
-    padding: 10px 8px;
+    width: calc(16.66% - 10px);
+    min-width: 112px;
+    border-radius: 12px;
+    padding: 12px 10px;
     color: #fff;
     box-sizing: border-box;
-  }
-  .tile-in { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-  .tile-out { background: linear-gradient(135deg, #27ae60, #1e8449); }
-  .tile-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tile-chg { font-size: 16px; font-weight: 700; margin: 4px 0 2px; }
-  .tile-net { font-size: 12px; opacity: .9; }
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+    transition: transform 0.15s ease;
 
-  .vane-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    &:hover { transform: translateY(-2px); }
+  }
+  .tile-in { background: linear-gradient(145deg, #fb7185, #be123c); }
+  .tile-out { background: linear-gradient(145deg, #34d399, #047857); }
+  .tile-name {
+    font-size: 13px; font-weight: 650;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .tile-chg { font-size: 17px; font-weight: 750; margin: 6px 0 2px; letter-spacing: -0.02em; }
+  .tile-net { font-size: 12px; opacity: .92; }
+
+  .vane-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
 
   .star-toolbar {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     flex-wrap: wrap;
   }
-  .star-note { font-size: 12px; }
+  .star-note { font-size: 12px; color: #94a3b8; }
   .star-chart {
     width: 100%;
-    height: 520px;
-    background: #1a1a1a;
-    border-radius: 8px;
+    height: 620px;
+    background: #0b1220;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #1e293b;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  }
+  .star-chart ::v-deep svg {
+    shape-rendering: geometricPrecision;
   }
   .star-legend {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-top: 8px;
+    margin-top: 10px;
     font-size: 12px;
-    color: #909399;
+    color: #64748b;
   }
   .leg-bar {
-    width: 120px;
-    height: 10px;
-    border-radius: 4px;
-    background: linear-gradient(90deg, #1b5e20, #90a4ae, #b71c1c);
+    width: 128px;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #059669, #94a3b8, #e11d48);
   }
 }
+
+.rule-muted { color: #94a3b8; }
 </style>

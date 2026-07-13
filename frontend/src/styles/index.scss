@@ -4,16 +4,37 @@
 @import './element-ui.scss';
 @import './sidebar.scss';
 
+:root {
+  --app-bg: #eef2f6;
+  --app-bg-accent: #e8eef5;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --accent: #0f766e;
+  --accent-soft: rgba(15, 118, 110, 0.1);
+  --up: #e11d48;
+  --down: #059669;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
 body {
   height: 100%;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+  color: var(--text);
+  font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    system-ui, -apple-system, sans-serif;
+  background: var(--app-bg);
 }
 
 label {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 html {
@@ -23,6 +44,10 @@ html {
 
 #app {
   height: 100%;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(15, 118, 110, 0.07), transparent 55%),
+    radial-gradient(900px 420px at 95% 0%, rgba(225, 29, 72, 0.04), transparent 50%),
+    var(--app-bg);
 }
 
 *,
@@ -59,7 +84,52 @@ div:focus {
   }
 }
 
-// main-container global css
 .app-container {
-  padding: 20px;
+  padding: 20px 24px 28px;
+}
+
+/* Element 全局微调 */
+.el-card {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
+  overflow: hidden;
+}
+
+.el-card__header {
+  border-bottom: 1px solid var(--border) !important;
+  padding: 14px 18px !important;
+  background: linear-gradient(180deg, #fff, #fbfdff);
+}
+
+.el-button--primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  border-radius: 10px !important;
+  font-weight: 600;
+}
+
+.el-button--primary:hover,
+.el-button--primary:focus {
+  background: #0d9488 !important;
+  border-color: #0d9488 !important;
+}
+
+.el-tabs__item.is-active {
+  color: var(--accent) !important;
+  font-weight: 600;
+}
+
+.el-tabs__active-bar {
+  background-color: var(--accent) !important;
+}
+
+.el-table th {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+  background: #fafbfc !important;
 }
