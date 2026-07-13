@@ -15,7 +15,7 @@ module.exports = {
    * 优先使用 brandAvatarUrl；都空则用默认 stock-logo.svg
    */
   brandAvatarUrl: '',
-  brandAvatar: 'stock-logo.svg',
+  brandAvatar: 'ths-logo.png',
 
   /**
    * 右上角下拉「我的项目」链接。换成你自己的 GitHub / 主页即可。

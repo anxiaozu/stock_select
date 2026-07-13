@@ -25,7 +25,7 @@ export default {
   data() {
     return {
       title: 'A股选股',
-      logo: require('@/assets/stock-logo.svg')
+      logo: require('@/assets/ths-logo.png')
     }
   }
 }

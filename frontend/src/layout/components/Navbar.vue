@@ -175,7 +175,9 @@ export default {
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    object-fit: cover;
+    object-fit: contain;
+    background: #fff;
+    padding: 2px;
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
   }
 
@@ -243,7 +245,9 @@ export default {
           width: 34px;
           height: 34px;
           border-radius: 10px;
-          object-fit: cover;
+          object-fit: contain;
+          background: #fff;
+          padding: 2px;
           border: 1px solid #e2e8f0;
         }
 
