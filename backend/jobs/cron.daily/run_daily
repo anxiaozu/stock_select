@@ -15,11 +15,30 @@ echo "###################"$DATETIME"###################" >> /data/logs/daily.${D
 #增加获得今日全部数据和大盘数据
 /usr/local/bin/python3 /data/stock/jobs/18h_daily_job.py >> /data/logs/daily.${DATE}.log
 
+#板块资金流（同花顺：行业+概念，按净流入排名）。
+/usr/local/bin/python3 /data/stock/jobs/sector_fund_flow_daily_job.py >> /data/logs/daily.${DATE}.log
+
+#东财快照缺失时，用腾讯行情补市盈率/市净率/市值/换手率/量比。
+/usr/local/bin/python3 /data/stock/jobs/enrich_fundamentals_tencent.py >> /data/logs/daily.${DATE}.log
+
+#龙虎榜每日明细 + 买卖营业部席位。
+/usr/local/bin/python3 /data/stock/jobs/lhb_detail_daily_job.py >> /data/logs/daily.${DATE}.log
+
 
 echo "###################"$DATETIME"###################" >> /data/logs/daily.${DATE}.log
 #使用股票指标预测。
 /usr/local/bin/python3 /data/stock/jobs/guess_indicators_daily_job.py >> /data/logs/daily.${DATE}.log
+
+#兜底回填：东财快照不可用时，用新浪日线自算 换手率/流通市值/量比（幂等，可重复跑）。
+/usr/local/bin/python3 /data/stock/jobs/backfill_fundamentals.py >> /data/logs/daily.${DATE}.log
+
 /usr/local/bin/python3 /data/stock/jobs/guess_indicators_daily_buy_job.py >> /data/logs/daily.${DATE}.log
+/usr/local/bin/python3 /data/stock/jobs/guess_indicators_daily_sell_job.py >> /data/logs/daily.${DATE}.log
+
+echo "###################"$DATETIME"###################" >> /data/logs/daily.${DATE}.log
+#每日任务健康监控 + 告警（只读统计，严重异常时非0退出）。
+DATE_INT=`date +%Y%m%d`
+/usr/local/bin/python3 /data/stock/jobs/monitor_daily.py ${DATE_INT} >> /data/logs/daily.${DATE}.log
 
 #清除前3天数据。
 DATE_20=`date -d '-20 days' +%Y-%m-%d`

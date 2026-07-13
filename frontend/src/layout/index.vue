@@ -1,9 +1,9 @@
 <template>
   <div :class="classObj" class="app-wrapper">
-    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
-    <sidebar class="sidebar-container" />
-    <div class="main-container">
-      <div :class="{'fixed-header':fixedHeader}">
+    <div v-if="!hideSidebar && device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
+    <sidebar v-if="!hideSidebar" class="sidebar-container" />
+    <div class="main-container" :class="{ 'no-sidebar': hideSidebar }">
+      <div :class="{'fixed-header':fixedHeader, 'no-sidebar': hideSidebar}">
         <navbar />
       </div>
       <app-main />
@@ -14,6 +14,7 @@
 <script>
 import { Navbar, Sidebar, AppMain } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
+import defaultSettings from '@/settings'
 
 export default {
   name: 'Layout',
@@ -23,6 +24,11 @@ export default {
     AppMain
   },
   mixins: [ResizeMixin],
+  data() {
+    return {
+      hideSidebar: defaultSettings.hideSidebar !== false
+    }
+  },
   computed: {
     sidebar() {
       return this.$store.state.app.sidebar
@@ -34,6 +40,15 @@ export default {
       return this.$store.state.settings.fixedHeader
     },
     classObj() {
+      if (this.hideSidebar) {
+        return {
+          hideSidebar: true,
+          openSidebar: false,
+          withoutAnimation: true,
+          mobile: this.device === 'mobile',
+          noSidebar: true
+        }
+      }
       return {
         hideSidebar: !this.sidebar.opened,
         openSidebar: this.sidebar.opened,
@@ -89,5 +104,14 @@ export default {
 
   .mobile .fixed-header {
     width: 100%;
+  }
+
+  .fixed-header.no-sidebar,
+  .noSidebar .fixed-header {
+    width: 100% !important;
+  }
+
+  .main-container.no-sidebar {
+    margin-left: 0 !important;
   }
 </style>

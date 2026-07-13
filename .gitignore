@@ -115,3 +115,12 @@ doc
 /bin
 pkg
 *.tmp
+
+# local / secrets / caches
+backend/logs/
+logs/
+.claude/
+.cursor/
+*.local
+.env.*
+!.env.example

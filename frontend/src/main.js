@@ -17,14 +17,12 @@ import '@/icons' // icon
 // 不进行登录校验。
 
 /**
- * If you don't want to use mock-server
- * you want to use MockJs for mock api
- * you can execute: mockXHR()
- *
- * Currently MockJs will be used in the production environment,
- * please remove it before going online ! ! !
+ * 前端 Mock.js 开关。
+ * 生产环境永远不启用 Mock（避免线上返回假数据/绕过后端）。
+ * 默认关闭；仅在非生产环境且显式设置 VUE_APP_MOCK=true 时启用。
+ * 本地开发默认走 devServer 代理到真实后端，不受影响。
  */
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV !== 'production' && process.env.VUE_APP_MOCK === 'true') {
   const { mockXHR } = require('../mock')
   mockXHR()
 }

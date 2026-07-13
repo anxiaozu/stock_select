@@ -13,6 +13,7 @@ import libs.stock_web_dic as stock_web_dic
 import web.dataTableHandler as dataTableHandler
 import web.dataEditorHandler as dataEditorHandler
 import web.dataIndicatorsHandler as dataIndicatorsHandler
+import web.dashboardHandler as dashboardHandler
 import web.base as webBase
 import pandas as pd
 import numpy as np
@@ -39,6 +40,8 @@ class Application(tornado.web.Application):
             (r"/data/editor/save", dataEditorHandler.SaveEditorHandler),
             # 获得股票指标数据。
             (r"/api/v1/data/indicators", dataIndicatorsHandler.GetDataIndicatorsHandler),
+            # Dashboard 扩展：市场情绪面 + 财经快讯。
+            (r"/api/v1/dashboard_extra", dashboardHandler.DashboardExtraHandler),
         ]
         settings = dict(  # 配置
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

@@ -1,0 +1,6 @@
+# 测试依赖（零数据库、零网络）。
+# 安装：python -m pip install -r backend/tests/requirements-test.txt
+pytest>=7.0
+pandas
+numpy
+stockstats

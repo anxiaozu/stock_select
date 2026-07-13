@@ -33,6 +33,40 @@ CREATE TABLE IF NOT EXISTS `stock_zh_a_spot_em` (
    KEY `idx_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `stock_fund_flow_industry` (
+  `date` varchar(255) NOT NULL,
+  `rank_no` int(11) DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
+  `index_value` double(20,2) DEFAULT NULL,
+  `change_percent` double(20,2) DEFAULT NULL,
+  `inflow` double(20,2) DEFAULT NULL,
+  `outflow` double(20,2) DEFAULT NULL,
+  `net_amount` double(20,2) DEFAULT NULL,
+  `company_count` int(11) DEFAULT NULL,
+  `leader_stock` varchar(255) DEFAULT NULL,
+  `leader_change_percent` double(20,2) DEFAULT NULL,
+  `leader_price` double(20,2) DEFAULT NULL,
+  PRIMARY KEY (`date`,`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE IF NOT EXISTS `stock_fund_flow_concept` (
+  `date` varchar(255) NOT NULL,
+  `rank_no` int(11) DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
+  `index_value` double(20,2) DEFAULT NULL,
+  `change_percent` double(20,2) DEFAULT NULL,
+  `inflow` double(20,2) DEFAULT NULL,
+  `outflow` double(20,2) DEFAULT NULL,
+  `net_amount` double(20,2) DEFAULT NULL,
+  `company_count` int(11) DEFAULT NULL,
+  `leader_stock` varchar(255) DEFAULT NULL,
+  `leader_change_percent` double(20,2) DEFAULT NULL,
+  `leader_price` double(20,2) DEFAULT NULL,
+  PRIMARY KEY (`date`,`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
 CREATE TABLE IF NOT EXISTS `stock_lhb_ggtj_sina` (
   `date` varchar(255) NOT NULL,
   `code` varchar(255) NOT NULL,
@@ -105,6 +139,14 @@ CREATE TABLE `guess_indicators_daily` (
   `vr_6_sma` double(20,2) DEFAULT NULL,
   `wr_10` double(20,2) DEFAULT NULL,
   `wr_6` double(20,2) DEFAULT NULL,
+  `close_5_sma` double(20,2) DEFAULT NULL,
+  `close_10_sma` double(20,2) DEFAULT NULL,
+  `close_20_sma` double(20,2) DEFAULT NULL,
+  `close_60_sma` double(20,2) DEFAULT NULL,
+  `volume_5_sma` double(20,2) DEFAULT NULL,
+  `high_20_max` double(20,2) DEFAULT NULL,
+  `rsi_6` double(20,2) DEFAULT NULL,
+  `strategy` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`code`,`date`),
   KEY `idx_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -150,6 +192,15 @@ CREATE TABLE `guess_indicators_lite_buy_daily` (
   `vr_6_sma` double(20,2) DEFAULT NULL,
   `wr_10` double(20,2) DEFAULT NULL,
   `wr_6` double(20,2) DEFAULT NULL,
+  `close_5_sma` double(20,2) DEFAULT NULL,
+  `close_10_sma` double(20,2) DEFAULT NULL,
+  `close_20_sma` double(20,2) DEFAULT NULL,
+  `close_60_sma` double(20,2) DEFAULT NULL,
+  `volume_5_sma` double(20,2) DEFAULT NULL,
+  `high_20_max` double(20,2) DEFAULT NULL,
+  `rsi_6` double(20,2) DEFAULT NULL,
+  `strategy` varchar(255) DEFAULT NULL,
+  `score` double(20,2) DEFAULT NULL,
   PRIMARY KEY (`code`,`date`),
   KEY `idx_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -195,6 +246,14 @@ CREATE TABLE `guess_indicators_lite_sell_daily` (
   `vr_6_sma` double(20,2) DEFAULT NULL,
   `wr_10` double(20,2) DEFAULT NULL,
   `wr_6` double(20,2) DEFAULT NULL,
+  `close_5_sma` double(20,2) DEFAULT NULL,
+  `close_10_sma` double(20,2) DEFAULT NULL,
+  `close_20_sma` double(20,2) DEFAULT NULL,
+  `close_60_sma` double(20,2) DEFAULT NULL,
+  `volume_5_sma` double(20,2) DEFAULT NULL,
+  `high_20_max` double(20,2) DEFAULT NULL,
+  `rsi_6` double(20,2) DEFAULT NULL,
+  `strategy` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`code`,`date`),
   KEY `idx_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

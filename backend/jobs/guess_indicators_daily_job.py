@@ -23,8 +23,21 @@ def stat_all_batch(tmp_datetime):
     except Exception as e:
         print("error :", e)
 
+    # 并发预热历史缓存：把“无缓存”的股票(冷启动/新股)一次性并发拉好，
+    # 使后续逐只指标计算命中缓存；已有缓存的交给当日 K 线追加(零网络)。
+    try:
+        codes = pd.read_sql(
+            "SELECT `code` FROM stock_zh_a_spot_em WHERE `date` = %s and `open` > 0 and `volume` > 0" % datetime_int,
+            con=common.engine())["code"].tolist()
+        _end = datetime.datetime.strptime(datetime_int, "%Y%m%d")
+        _start = (_end + datetime.timedelta(days=-100)).strftime("%Y-%m-%d")
+        print("######### prefetch hist cache #########: total", len(codes))
+        common.prefetch_hist_cache(codes, _start, _end.strftime("%Y-%m-%d"), workers=16, only_missing=True)
+    except Exception as e:
+        print("prefetch skip:", e)
+
     sql_count = """
-    SELECT count(1) FROM  stock_zh_a_spot_em WHERE `date` = %s and `open` > 0
+    SELECT count(1) FROM  stock_zh_a_spot_em WHERE `date` = %s and `open` > 0 and `volume` > 0
     """
     # 修改逻辑，增加中小板块计算。 中小板：002，创业板：300 。已经是经过筛选的数据了。
     count = common.select_count(sql_count, params=[datetime_int])
@@ -41,7 +54,7 @@ def stat_all_batch(tmp_datetime):
                             `amplitude`,`high`,`low`,`open`,`closed`,`volume_ratio`,`turnover_rate`,
                             `pe_ratio`,`pb_ratio`,`market_cap`,`circulating_market_cap`,`rise_speed`,
                             `change_5min`,`change_ercent_60day`,`ytd_change_percent`
-                    FROM stock_zh_a_spot_em WHERE `date` = %s and `open` > 0  limit %s , %s
+                    FROM stock_zh_a_spot_em WHERE `date` = %s and `open` > 0 and `volume` > 0  limit %s , %s
                     """
         sql_2 = sql_1 % (datetime_int, i, batch_size)
         print(sql_2)
@@ -54,6 +67,15 @@ def stat_all_batch(tmp_datetime):
 
 # 分批执行。
 def stat_index_all(data, idx):
+    # 用当日已抓取的 OHLC 预填每只股票的历史缓存，使后续指标计算命中缓存、
+    # 免去逐只网络增量拉取，大幅缩短每日更新耗时。
+    for _, r in data.iterrows():
+        try:
+            common.append_today_bar_to_cache(
+                r["code"], r["date"], r["open"], r["closed"],
+                r["high"], r["low"], r["volume"], r.get("turnover", 0))
+        except Exception as e:
+            print("prefill cache error:", e)
     # print(data["last_price"])
     # 1), n天涨跌百分百计算
     # open price change (in percent) between today and the day before yesterday ‘r’ stands for rate.
@@ -144,7 +166,10 @@ def stat_index_all(data, idx):
     
     stock_column = ['date','code', 'boll', 'boll_lb', 'boll_ub', 
                     'kdjd', 'kdjj', 'kdjk', 'macd', 'macdh', 'macds', 'pdi',
-                    'trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6']
+                    'trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6',
+                    # 新增：均线(多头排列)、量均、20日高点(放量突破)、RSI。
+                    'close_5_sma', 'close_10_sma', 'close_20_sma', 'close_60_sma',
+                    'volume_5_sma', 'high_20_max', 'rsi_6']
     # code     cr cr-ma1 cr-ma2 cr-ma3      date
 
     data_new = concat_guess_data(stock_column, data)
@@ -224,15 +249,9 @@ def apply_guess(tmp, stock_column):
     # stock = stock.sort_index(0)  # 将数据按照日期排序下。
 
     stock["date"] = stock.index.values  # 增加日期列。
-    print(f"stock: {stock}")
     # stock = stock.sort_index(0)  # 将数据按照日期排序下。
-    # print(stock) [186 rows x 14 columns]
     # 初始化统计类
-    # stockStat = stockstats.StockDataFrame.retype(pd.read_csv('002032.csv'))
     stockStat = stockstats.StockDataFrame.retype(stock)
-    print(f"stockStat : {stockStat}")
-
-    print("########################## print result ##########################")
     for col in stock_column:
         if col == 'date':
             stock_data_list.append(date)
@@ -241,13 +260,8 @@ def apply_guess(tmp, stock_column):
             stock_data_list.append(code)
             stock_name_list.append('code')
         else:
-            # 将数据的最后一个返回。
-            print(col)
-            print(stockStat[col])
-            print(stockStat[col].values[1])
-            #print(stockStat[col].head(1))
-            
-            tmp_val = stockStat[col].values[1]
+            # 将数据的最后一个返回。取最新交易日的指标值（时间升序时为 -1）。
+            tmp_val = stockStat[col].values[-1]
             if np.isinf(tmp_val):  # 解决值中存在INF问题。
                 tmp_val = 0
             if np.isnan(tmp_val):  # 解决值中存在NaN问题。

@@ -78,6 +78,8 @@ class GetStockDataHandler(webBase.BaseHandler):
         type_param = self.get_argument("type", default=None, strip=False)
         date_param = self.get_argument("date", default=None, strip=False)
         code_param = self.get_argument("code", default=None, strip=False)
+        # 股票名称模糊搜索(参数名避开 name=表名)。
+        stock_name_param = self.get_argument("stock_name", default=None, strip=False)
 
         logging.info(f"page param: {page_param}, {limit_param}, {type_param}, {date_param}, {code_param}")
 
@@ -119,7 +121,13 @@ class GetStockDataHandler(webBase.BaseHandler):
             if str(item).startswith("columns[") and str(item).endswith("[search][value]"):
                 logging.info("item: %s, val: %s" % (item, val))
                 str_idx = item.replace("columns[", "").replace("][search][value]", "")
-                int_idx = int(str_idx)
+                try:
+                    int_idx = int(str_idx)
+                except (ValueError, TypeError):
+                    continue
+                # 列索引越界直接跳过，列名只能来自表定义(白名单)。
+                if int_idx < 0 or int_idx >= len(tableInfo.columns):
+                    continue
                 # 找到字符串
                 str_val = val[0].decode("utf-8")
                 if str_val != "":  # 字符串。
@@ -127,7 +135,9 @@ class GetStockDataHandler(webBase.BaseHandler):
                     search_by_data.append(val[0].decode("utf-8"))  # bytes转换字符串
 
         # 打印日志。
+        # 使用参数化查询，值全部通过占位符 %s 绑定，列名只来自表定义(白名单)。
         search_sql = ""
+        search_params = []
         search_idx = 0
 
         logging.info("################# search_by_column #################")
@@ -137,54 +147,99 @@ class GetStockDataHandler(webBase.BaseHandler):
         for item in search_by_column:
             val = search_by_data[search_idx]
             logging.info("idx: %s, column: %s, value: %s " % (search_idx, item, val))
-            # 查询sql
+            # 查询sql：列名来自 tableInfo.columns 白名单，值用占位符绑定。
+            clause = " `%s` = %%s " % item
             if search_idx == 0:
-                search_sql = " WHERE `%s` = '%s' " % (item, val)
+                search_sql = " WHERE " + clause
             else:
-                search_sql = search_sql + " AND `%s` = '%s' " % (item, val)
+                search_sql = search_sql + " AND " + clause
+            search_params.append(val)
             search_idx = search_idx + 1
+
+        # 买入/卖出推荐表：未传 date 时默认最新交易日，避免历史全表刷出几十页。
+        _LATEST_DATE_TABLES = (
+            "guess_indicators_lite_buy_daily",
+            "guess_indicators_lite_sell_daily",
+        )
+        if not date_param and name_param in _LATEST_DATE_TABLES:
+            try:
+                latest_rows = self.db.query(
+                    " SELECT max(`date`) AS d FROM `%s` " % tableInfo.table_name)
+                if latest_rows and latest_rows[0].get("d") is not None:
+                    date_param = str(latest_rows[0]["d"])
+                    logging.info("default latest date for %s: %s", name_param, date_param)
+            except Exception as e:
+                logging.warning("resolve latest date failed for %s: %s", name_param, e)
 
         if date_param:
             if "WHERE" not in search_sql:
-                search_sql += f" WHERE `date` = '{date_param}' "
+                search_sql += " WHERE `date` = %s "
             else:
-                search_sql += f" AND `date` = '{date_param}' "
-        
+                search_sql += " AND `date` = %s "
+            search_params.append(date_param)
+
         if code_param:
+            # 代码模糊匹配：输 600519 不必带 sh/sz 前缀。
             if "WHERE" not in search_sql:
-                search_sql += f" WHERE `code` = '{code_param}' "
+                search_sql += " WHERE `code` LIKE %s "
             else:
-                search_sql += f" AND `code` = '{code_param}' "
-        
+                search_sql += " AND `code` LIKE %s "
+            search_params.append("%" + code_param + "%")
+
+        if stock_name_param and "name" in tableInfo.columns:
+            # 名称模糊匹配：输"茅台"可搜到"贵州茅台"。
+            if "WHERE" not in search_sql:
+                search_sql += " WHERE `name` LIKE %s "
+            else:
+                search_sql += " AND `name` LIKE %s "
+            search_params.append("%" + stock_name_param + "%")
+
         # print("tableInfo :", stock_web)
         order_by_sql = ""
         # 增加排序。
         if len(order_by_column) != 0 and len(order_by_dir) != 0:
-            order_by_sql = "  ORDER BY "
+            order_clauses = []
             idx = 0
             for key in order_by_column:
-                # 找到排序字段和dir。
+                # 排序字段索引必须落在表定义范围内(白名单)，否则跳过。
+                if not isinstance(key, int) or key < 0 or key >= len(tableInfo.columns):
+                    idx += 1
+                    continue
                 col_tmp = tableInfo.columns[key]
-                dir_tmp = order_by_dir[idx]
-                if idx != 0:
-                    order_by_sql += " , %s %s" % (col_tmp, dir_tmp)
-                else:
-                    order_by_sql += "  %s %s" % (col_tmp, dir_tmp)
+                # 排序方向白名单校验，只允许 ASC/DESC，非法回退 ASC。
+                dir_raw = order_by_dir[idx] if idx < len(order_by_dir) else "asc"
+                dir_tmp = "DESC" if str(dir_raw).strip().lower() == "desc" else "ASC"
+                order_clauses.append(" `%s` %s " % (col_tmp, dir_tmp))
                 idx += 1
-        # 查询数据库。
+            if order_clauses:
+                order_by_sql = "  ORDER BY " + " , ".join(order_clauses)
+        # 未指定排序时，使用表定义里的默认排序(代码内白名单，非用户输入)。
+        if not order_by_sql and getattr(tableInfo, "order_by", None):
+            order_by_sql = " ORDER BY " + tableInfo.order_by
+        # 查询数据库。limit/offset 强制转 int，防止注入。
         limit_sql = ""
-        if int(limit_param) > 0:
-            start = ( int(page_param) - 1 ) * int(limit_param)
-            limit_sql = f" LIMIT {start} , {limit_param} "
+        try:
+            limit_int = int(limit_param)
+        except (ValueError, TypeError):
+            limit_int = 0
+        try:
+            page_int = int(page_param)
+        except (ValueError, TypeError):
+            page_int = 0
+        if limit_int > 0:
+            start = (page_int - 1) * limit_int
+            if start < 0:
+                start = 0
+            limit_sql = " LIMIT %d , %d " % (start, limit_int)
         sql = " SELECT * FROM `%s` %s %s %s " % (
             tableInfo.table_name, search_sql, order_by_sql, limit_sql)
         count_sql = " SELECT count(1) as num FROM `%s` %s " % (tableInfo.table_name, search_sql)
 
         logging.info("select sql : " + sql)
         logging.info("count sql : " + count_sql)
-        stock_web_list = self.db.query(sql)
+        stock_web_list = self.db.query(sql, *search_params)
 
-        stock_web_size = self.db.query(count_sql)
+        stock_web_size = self.db.query(count_sql, *search_params)
         logging.info("tableInfoList size : %s " % stock_web_size)
 
         # 动态表格展示：
@@ -217,6 +272,7 @@ class GetStockDataHandler(webBase.BaseHandler):
             "total": stock_web_size[0]["num"],
             "recordsTotal": stock_web_size[0]["num"],
             "recordsFiltered": stock_web_size[0]["num"],
+            "date": date_param,
             "data": stock_web_list
         }
         # logging.info("####################")

@@ -34,7 +34,7 @@ module.exports = {
     port: 8080,
     proxy: {
       '/api/v1': {
-        target: 'http://backend:9090/api/v1',
+        target: 'http://localhost:9090/api/v1',
         changeOrigin: true,
         pathRewrite: {
           '^/api/v1': ''

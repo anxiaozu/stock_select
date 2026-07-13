@@ -7,6 +7,16 @@
     position: relative;
   }
 
+  // 隐藏左侧栏时：主区铺满全宽
+  .noSidebar {
+    .main-container {
+      margin-left: 0 !important;
+    }
+    .sidebar-container {
+      display: none !important;
+    }
+  }
+
   .sidebar-container {
     transition: width 0.28s;
     width: $sideBarWidth !important;

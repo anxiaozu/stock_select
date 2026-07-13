@@ -32,9 +32,9 @@ STOCK_WEB_DATA_LIST.append(
         'volume', 'turnover', 'amplitude', 'high', 'low', 'open', 'closed', 'volume_ratio',
         'turnover_rate', 'pe_ratio','pb_ratio', 'market_cap','circulating_market_cap','rise_speed',
         'change_5min', 'change_ercent_60day','ytd_change_percent'] ,
-        column_names=['日期','代码','名称','最新价','涨跌幅','涨跌额','成交量','成交额',
-                      '振幅','最高','最低','今开','昨收','量比','换手率','动态市盈率',
-                      '市净率', '总市值', '流通市值', '涨速', '5分钟涨跌', '60日涨跌幅', '年初至今涨跌幅'],
+        column_names=['日期','代码','名称','最新价(元)','涨跌幅(%)','涨跌额(元)','成交量(股)','成交额(元)',
+                      '振幅(%)','最高','最低','今开','昨收','量比','换手率(%)','动态市盈率',
+                      '市净率', '总市值(元)', '流通市值(元)', '涨速', '5分钟涨跌(%)', '60日涨跌幅(%)', '年初至今涨跌幅(%)'],
         primary_key=[],
         order_by=" code asc "
     )
@@ -44,12 +44,44 @@ STOCK_WEB_DATA_LIST.append(
     StockWebData(
         mode="query",
         type="1，股票基本数据",
-        name="龙虎榜-个股上榜-新浪",
+        name="龙虎榜-近5日统计-新浪",
         table_name="stock_lhb_ggtj_sina",
         columns= ['date','code','name','ranking_times','sum_buy','sum_sell','net_amount','buy_seat','sell_seat'],
-        column_names=['日期','代码', '名称', '上榜次数', '累积购买额', '累积卖出额', '净额', '买入席位数', '卖出席位数'],
+        column_names=['日期','代码', '名称', '上榜次数', '累积购买额(万元)', '累积卖出额(万元)', '净额(万元)', '买入席位数(个)', '卖出席位数(个)'],
         primary_key=[],
         order_by=" code asc "
+    )
+)
+
+STOCK_WEB_DATA_LIST.append(
+    StockWebData(
+        mode="query",
+        type="1，股票基本数据",
+        name="龙虎榜-每日明细-东财",
+        table_name="stock_lhb_detail_daily",
+        columns=['date', 'code', 'name', 'change_percent', 'close_price',
+                 'net_amount', 'buy_amount', 'sell_amount', 'lhb_amount',
+                 'net_ratio', 'turnover_rate', 'reason', 'interpret'],
+        column_names=['日期', '代码', '名称', '涨跌幅(%)', '收盘价(元)',
+                      '净买额(元)', '买入额(元)', '卖出额(元)', '龙虎榜成交额(元)',
+                      '净买占比(%)', '换手率(%)', '上榜原因', '解读'],
+        primary_key=[],
+        order_by=" `date` desc, `net_amount` desc "
+    )
+)
+
+STOCK_WEB_DATA_LIST.append(
+    StockWebData(
+        mode="query",
+        type="1，股票基本数据",
+        name="龙虎榜-买卖席位明细",
+        table_name="stock_lhb_seat_detail",
+        columns=['date', 'code', 'name', 'side', 'rank_no', 'dept_name',
+                 'buy_amount', 'sell_amount', 'net_amount', 'reason'],
+        column_names=['日期', '代码', '名称', '方向', '席位排名', '营业部/席位名称',
+                      '买入金额(元)', '卖出金额(元)', '净额(元)', '上榜原因'],
+        primary_key=[],
+        order_by=" `date` desc, `code` asc, `side` asc, `rank_no` asc "
     )
 )
 
@@ -62,9 +94,9 @@ STOCK_WEB_DATA_LIST.append(
         columns= ['date', 'code', 'name', 'quote_change', 'close_price', 'average_price',
                                    'overflow_rate', 'trade_number', 'sum_volume', 'sum_turnover',
                                    'turnover_market_rate'],
-        column_names=['日期', '代码', '名称', '涨跌幅', '收盘价', '成交均价',
-                      '折溢率', '成交笔数', '成交总量', '成交总额',
-                      '成交总额/流通市值'],
+        column_names=['日期', '代码', '名称', '涨跌幅(%)', '收盘价(元)', '成交均价(元)',
+                      '折溢率(%)', '成交笔数', '成交总量(万股)', '成交总额(万元)',
+                      '成交总额/流通市值(%)'],
         primary_key=[],
         order_by=" code asc "
     )
@@ -90,17 +122,19 @@ STOCK_WEB_DATA_LIST.append(
         'turnover_rate', 'pe_ratio','pb_ratio', 'market_cap','circulating_market_cap','rise_speed',
         'change_5min', 'change_ercent_60day','ytd_change_percent',
         'boll', 'boll_lb', 'boll_ub', 'kdjd', 'kdjj', 'kdjk', 'macd', 'macdh',
-         'macds', 'pdi','trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6'] ,
+         'macds', 'pdi','trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6',
+        'close_5_sma','close_10_sma','close_20_sma','close_60_sma','volume_5_sma','high_20_max','rsi_6','strategy','score'] ,
         # 中文说明前面和 1 数据一致。
-        column_names=['日期','代码','名称','最新价','涨跌幅','涨跌额','成交量','成交额',
-                      '振幅','最高','最低','今开','昨收','量比','换手率','动态市盈率',
-                      '市净率', '总市值', '流通市值', '涨速', '5分钟涨跌', '60日涨跌幅', 
-                      '年初至今涨跌幅',
+        column_names=['日期','代码','名称','最新价(元)','涨跌幅(%)','涨跌额(元)','成交量(股)','成交额(元)',
+                      '振幅(%)','最高','最低','今开','昨收','量比','换手率(%)','动态市盈率',
+                      '市净率', '总市值(元)', '流通市值(元)', '涨速', '5分钟涨跌(%)', '60日涨跌幅(%)', 
+                      '年初至今涨跌幅(%)',
                       'boll', 'boll_lb', 'boll_ub', 
                     'kdjd', 'kdjj', 'kdjk', 'macd', 'macdh', 'macds', 'pdi',
-                    'trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6'],
+                    'trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6',
+                    'MA5','MA10','MA20','MA60','量均5','20日高','RSI6','命中策略','综合分'],
         primary_key=[],
-        order_by=" buy_date desc  "
+        order_by=" `date` desc, `score` desc "
     )
 )
 
@@ -122,17 +156,19 @@ STOCK_WEB_DATA_LIST.append(
         'turnover_rate', 'pe_ratio','pb_ratio', 'market_cap','circulating_market_cap','rise_speed',
         'change_5min', 'change_ercent_60day','ytd_change_percent',
         'boll', 'boll_lb', 'boll_ub', 'kdjd', 'kdjj', 'kdjk', 'macd', 'macdh',
-         'macds', 'pdi','trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6'] ,
+         'macds', 'pdi','trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6',
+        'close_5_sma','close_10_sma','close_20_sma','close_60_sma','volume_5_sma','high_20_max','rsi_6','strategy','score'] ,
         # 中文说明前面和 1 数据一致。
-        column_names=['日期','代码','名称','最新价','涨跌幅','涨跌额','成交量','成交额',
-                      '振幅','最高','最低','今开','昨收','量比','换手率','动态市盈率',
-                      '市净率', '总市值', '流通市值', '涨速', '5分钟涨跌', '60日涨跌幅', 
-                      '年初至今涨跌幅',
+        column_names=['日期','代码','名称','最新价(元)','涨跌幅(%)','涨跌额(元)','成交量(股)','成交额(元)',
+                      '振幅(%)','最高','最低','今开','昨收','量比','换手率(%)','动态市盈率',
+                      '市净率', '总市值(元)', '流通市值(元)', '涨速', '5分钟涨跌(%)', '60日涨跌幅(%)', 
+                      '年初至今涨跌幅(%)',
                       'boll', 'boll_lb', 'boll_ub', 
                     'kdjd', 'kdjj', 'kdjk', 'macd', 'macdh', 'macds', 'pdi',
-                    'trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6'],
+                    'trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6',
+                    'MA5','MA10','MA20','MA60','量均5','20日高','RSI6','命中策略','综合分'],
         primary_key=[],
-        order_by=" buy_date desc  "
+        order_by=" `date` desc, `score` desc "
     )
 )
 
@@ -149,15 +185,17 @@ STOCK_WEB_DATA_LIST.append(
         'turnover_rate', 'pe_ratio','pb_ratio', 'market_cap','circulating_market_cap','rise_speed',
         'change_5min', 'change_ercent_60day','ytd_change_percent',
         'boll', 'boll_lb', 'boll_ub', 'kdjd', 'kdjj', 'kdjk', 'macd', 'macdh',
-         'macds', 'pdi','trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6'] ,
+         'macds', 'pdi','trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6',
+        'close_5_sma','close_10_sma','close_20_sma','close_60_sma','volume_5_sma','high_20_max','rsi_6','strategy'] ,
         # 中文说明前面和 1 数据一致。
-        column_names=['日期','代码','名称','最新价','涨跌幅','涨跌额','成交量','成交额',
-                      '振幅','最高','最低','今开','昨收','量比','换手率','动态市盈率',
-                      '市净率', '总市值', '流通市值', '涨速', '5分钟涨跌', '60日涨跌幅', 
-                      '年初至今涨跌幅',
+        column_names=['日期','代码','名称','最新价(元)','涨跌幅(%)','涨跌额(元)','成交量(股)','成交额(元)',
+                      '振幅(%)','最高','最低','今开','昨收','量比','换手率(%)','动态市盈率',
+                      '市净率', '总市值(元)', '流通市值(元)', '涨速', '5分钟涨跌(%)', '60日涨跌幅(%)', 
+                      '年初至今涨跌幅(%)',
                       'boll', 'boll_lb', 'boll_ub', 
                     'kdjd', 'kdjj', 'kdjk', 'macd', 'macdh', 'macds', 'pdi',
-                    'trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6'],
+                    'trix', 'trix_9_sma', 'vr', 'vr_6_sma', 'wr_10', 'wr_6',
+                    'MA5','MA10','MA20','MA60','量均5','20日高','RSI6','命中策略'],
 
         # columns=['date','code','name','latest_price','quote_change','ups_downs',
         #          'adx', 'adxr', 'boll', 'boll_lb', 'boll_ub', 'cci', 'cci_20', 'close_-1_r',
@@ -172,6 +210,41 @@ STOCK_WEB_DATA_LIST.append(
         
         primary_key=[],
         order_by=' date desc  '
+    )
+)
+
+# 板块资金流（同花顺）：行业 + 概念，按净流入排名。
+STOCK_WEB_DATA_LIST.append(
+    StockWebData(
+        mode="query",
+        type="3，板块资金流",
+        name="行业资金流-同花顺",
+        table_name="stock_fund_flow_industry",
+        columns=['date', 'rank_no', 'name', 'index_value', 'change_percent',
+                 'inflow', 'outflow', 'net_amount', 'company_count',
+                 'leader_stock', 'leader_change_percent', 'leader_price'],
+        column_names=['日期', '净流入排名', '行业', '行业指数', '涨跌幅(%)',
+                      '流入资金(亿)', '流出资金(亿)', '净额(亿)', '公司家数',
+                      '领涨股', '领涨股涨跌幅(%)', '领涨股价(元)'],
+        primary_key=[],
+        order_by=" `date` desc, `rank_no` asc "
+    )
+)
+
+STOCK_WEB_DATA_LIST.append(
+    StockWebData(
+        mode="query",
+        type="3，板块资金流",
+        name="概念资金流-同花顺",
+        table_name="stock_fund_flow_concept",
+        columns=['date', 'rank_no', 'name', 'index_value', 'change_percent',
+                 'inflow', 'outflow', 'net_amount', 'company_count',
+                 'leader_stock', 'leader_change_percent', 'leader_price'],
+        column_names=['日期', '净流入排名', '概念', '概念指数', '涨跌幅(%)',
+                      '流入资金(亿)', '流出资金(亿)', '净额(亿)', '公司家数',
+                      '领涨股', '领涨股涨跌幅(%)', '领涨股价(元)'],
+        primary_key=[],
+        order_by=" `date` desc, `rank_no` asc "
     )
 )
 
